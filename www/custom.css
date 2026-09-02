@@ -1,0 +1,100 @@
+/* =========================================================
+  Policy Data Explorer
+DfE GSS Hackathon 2026
+========================================================= */
+  
+  body {
+    background-color: #f5f5f5;
+      font-family: Arial, sans-serif;
+  }
+
+/* Header */
+  
+  .app-header {
+    background-color: #ffffff;
+      padding: 24px 30px;
+    margin-bottom: 20px;
+    border-bottom: 4px solid #003a69;
+  }
+
+.app-title {
+  font-size: 32px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.app-subtitle {
+  font-size: 16px;
+  margin-top: 6px;
+  color: #505a5f;
+}
+
+/* Cards */
+  
+  .panel-card {
+    background-color: #ffffff;
+      padding: 20px;
+    margin-bottom: 20px;
+    border: 1px solid #d8dde0;
+    border-radius: 4px;
+  }
+
+.kpi-card {
+  background-color: #ffffff;
+    padding: 20px;
+  margin-bottom: 20px;
+  border-top: 4px solid #003a69;
+  min-height: 120px;
+}
+
+.kpi-label {
+  font-size: 16px;
+  font-weight: 600;
+  color: #505a5f;
+}
+
+.kpi-value {
+  font-size: 30px;
+  font-weight: 700;
+  margin-top: 10px;
+}
+
+/* Plain-English policy question */
+  
+  .query-box {
+    background-color: #f3f2f1;
+      border-left: 5px solid #003a69;
+    padding: 15px;
+    font-size: 17px;
+    margin-top: 10px;
+  }
+
+/* Table */
+  
+  .table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+  }
+
+/* Buttons */
+  
+  .btn {
+    font-weight: 600;
+  }
+
+.btn-default {
+  background-color: #ffffff;
+    border: 1px solid #505a5f;
+}
+
+/* Sidebar / filters */
+  
+  .filter-panel {
+    background-color: #ffffff;
+      padding: 20px;
+    border: 1px solid #d8dde0;
+    border-radius: 4px;
+    margin-bottom: 20px;
+  }
