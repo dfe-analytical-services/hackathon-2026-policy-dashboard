@@ -143,10 +143,16 @@ mod_data_server <- function(
       })
       
       # ------------------------------------------------------
-      # Return reactive dataset to the rest of the app
+      # Return reactive dataset and metadata to the rest of the app
       # ------------------------------------------------------
       
-      return(app_data)
+      return(
+        list(
+          data = app_data,
+          metadata = metadata
+        )
+      )
+      
     }
   )
 }

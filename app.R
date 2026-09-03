@@ -173,10 +173,13 @@ server <- function(
   # Data module
   # ----------------------------------------------------------
   
-  app_data <- mod_data_server(
+  data_objects <- mod_data_server(
     "data",
     demo_data = demo_data
   )
+  
+  app_data <- data_objects$data
+  metadata <- data_objects$metadata
   
   
   # ----------------------------------------------------------
@@ -185,7 +188,8 @@ server <- function(
   
   filters <- mod_filters_server(
     "filters",
-    data = app_data
+    data = app_data,
+    metadata = metadata
   )
   
   

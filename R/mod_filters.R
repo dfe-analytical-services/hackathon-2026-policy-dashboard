@@ -53,7 +53,10 @@ mod_filters_ui <- function(id) {
 }
 
 
-mod_filters_server <- function(id, data) {
+mod_filters_server <- function(id,
+                               data,
+                               metadata # allow metadata to be used
+                               ) {
   
   moduleServer(
     id,
@@ -62,10 +65,61 @@ mod_filters_server <- function(id, data) {
       # ------------------------------------------------------
       # Update filter choices from the loaded dataset
       # ------------------------------------------------------
+      # find available filters
+      available_filters <- reactive({
+        
+        req(data())
+        
+        metadata() |>
+          dplyr::filter(
+            role %in% c("filter", "dimension"),
+            variable %in% names(data())
+          ) |>
+          dplyr::group_by(variable) |>
+          dplyr::slice(1) |>
+          dplyr::ungroup() |>
+          dplyr::select(
+            variable,
+            label
+          )
+        
+      })
+      
+      
+      # tempt test - check the filters shiny thinks are available
+      observe({
+        
+        req(available_filters())
+        
+        message("Available filters:")
+        
+        print(
+          available_filters()
+        )
+        
+      })
+      
+      # temp test 2  - check metadata roles
+      observe({
+        
+        req(metadata())
+        
+        message("Metadata roles:")
+        
+        print(
+          metadata() |>
+            dplyr::count(role)
+        )
+        
+      })
       
       observe({
         
         req(data())
+        
+        # temp test
+        message("Columns in uploaded dataset: ")
+        print(names(data()))
         
         available_measures <- variables_master |>
           dplyr::filter(
