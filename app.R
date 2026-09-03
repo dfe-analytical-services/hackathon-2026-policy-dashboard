@@ -5,78 +5,6 @@
 
 source("global.R")
 
-max_file_size_mb <- 2000
-options(shiny.maxRequestSize = max_file_size_mb * 1e6)
-
-
-# ------------------------------------------------------------
-# Temporary demo data
-# ------------------------------------------------------------
-
-set.seed(2026)
-
-demo_data <- tibble::tibble(
-  academic_year = sample(
-    c("2023/24", "2024/25", "2025/26"),
-    1000,
-    replace = TRUE
-  ),
-  
-  age_group = sample(
-    c("16-18", "19-23", "24+"),
-    1000,
-    replace = TRUE
-  ),
-  
-  provision_type = sample(
-    c(
-      "Education and Training",
-      "Apprenticeships",
-      "Community Learning"
-    ),
-    1000,
-    replace = TRUE
-  ),
-  
-  sector_subject_area = sample(
-    c(
-      "Construction",
-      "Engineering and Manufacturing",
-      "Health",
-      "Business",
-      "Digital",
-      "Science"
-    ),
-    1000,
-    replace = TRUE
-  ),
-  
-  region_name = sample(
-    c(
-      "London",
-      "South West",
-      "South East",
-      "West Midlands",
-      "North West",
-      "North East"
-    ),
-    1000,
-    replace = TRUE
-  ),
-  
-  enrolments = sample(
-    10:200,
-    1000,
-    replace = TRUE
-  ),
-  
-  achievements = sample(
-    5:150,
-    1000,
-    replace = TRUE
-  )
-)
-
 
 # ------------------------------------------------------------
 # User interface
@@ -92,6 +20,10 @@ ui <- fluidPage(
     )
   ),
   
+  # ----------------------------------------------------------
+  # Header
+  # ----------------------------------------------------------
+  
   div(
     class = "app-header",
     
@@ -100,13 +32,22 @@ ui <- fluidPage(
       APP_TITLE
     ),
     
-    div(
+    p(
       class = "app-subtitle",
       APP_SUBTITLE
     )
   ),
   
+  
+  # ----------------------------------------------------------
+  # Main page layout
+  # ----------------------------------------------------------
+  
   fluidRow(
+    
+    # --------------------------------------------------------
+    # Left sidebar
+    # --------------------------------------------------------
     
     column(
       width = 3,
@@ -114,46 +55,25 @@ ui <- fluidPage(
       div(
         class = "filter-panel",
         
-        mod_data_ui(
-          "data"
-        ),
+        mod_data_ui("data"),
         
-        h3("Build your data cut"),
-        
-        p(
-          "Select the information you need."
-        ),
-        
-        mod_filters_ui(
-          "filters"
-        )
+        mod_filters_ui("filters")
       )
     ),
+    
+    
+    # --------------------------------------------------------
+    # Main dashboard content
+    # --------------------------------------------------------
     
     column(
       width = 9,
       
-      mod_summary_ui(
-        "summary"
-      ),
+      mod_summary_ui("summary"),
       
-      div(
-        class = "panel-card",
-        
-        h3("Explore the results"),
-        
-        mod_chart_ui(
-          "chart"
-        )
-      ),
+      mod_chart_ui("chart"),
       
-      div(
-        class = "panel-card",
-        
-        mod_table_ui(
-          "table"
-        )
-      )
+      mod_table_ui("table")
     )
   )
 )
@@ -163,38 +83,32 @@ ui <- fluidPage(
 # Server
 # ------------------------------------------------------------
 
-server <- function(
-    input,
-    output,
-    session
-) {
+server <- function(input, output, session) {
+  
   
   # ----------------------------------------------------------
-  # Data module
+  # Data + metadata
   # ----------------------------------------------------------
   
-  data_objects <- mod_data_server(
+  data_module <- mod_data_server(
     "data",
     demo_data = demo_data
   )
   
-  app_data <- data_objects$data
-  metadata <- data_objects$metadata
-  
   
   # ----------------------------------------------------------
-  # Filter module
+  # Dynamic filters
   # ----------------------------------------------------------
   
   filters <- mod_filters_server(
     "filters",
-    data = app_data,
-    metadata = metadata
+    data = data_module$data,
+    metadata = data_module$metadata
   )
   
   
   # ----------------------------------------------------------
-  # Summary module
+  # Summary / KPI cards
   # ----------------------------------------------------------
   
   mod_summary_server(
@@ -206,7 +120,7 @@ server <- function(
   
   
   # ----------------------------------------------------------
-  # Chart module
+  # Chart
   # ----------------------------------------------------------
   
   mod_chart_server(
@@ -217,7 +131,7 @@ server <- function(
   
   
   # ----------------------------------------------------------
-  # Table module
+  # Table + download
   # ----------------------------------------------------------
   
   mod_table_server(

@@ -1,3 +1,13 @@
+# ============================================================
+# Policy Data Explorer
+# Dynamic filters module
+# ============================================================
+
+
+# ------------------------------------------------------------
+# UI
+# ------------------------------------------------------------
+
 mod_filters_ui <- function(id) {
   
   ns <- NS(id)
@@ -7,10 +17,9 @@ mod_filters_ui <- function(id) {
     selectInput(
       ns("measure"),
       "Measure",
-      choices = NULL # updated to be based on the file uploaded
+      choices = NULL
     ),
     
-    # allow filters to be dynamic, rather than static
     uiOutput(
       ns("dynamic_filters")
     ),
@@ -23,281 +32,299 @@ mod_filters_ui <- function(id) {
 }
 
 
-mod_filters_server <- function(id,
-                               data,
-                               metadata # allow metadata to be used
-                               ) {
+# ------------------------------------------------------------
+# Server
+# ------------------------------------------------------------
+
+mod_filters_server <- function(
+    id,
+    data,
+    metadata
+) {
   
   moduleServer(
     id,
     function(input, output, session) {
       
-      # ------------------------------------------------------
-      # Update filter choices from the loaded dataset
-      # ------------------------------------------------------
-      # find available filters
-      available_filters <- reactive({
+      
+      # --------------------------------------------------------
+      # Match metadata to columns actually present in data
+      # --------------------------------------------------------
+      
+      matched_metadata <- reactive({
         
         req(data())
+        req(metadata())
         
         metadata() |>
           dplyr::filter(
-            role %in% c("filter", "dimension"),
             variable %in% names(data())
           ) |>
-          dplyr::group_by(variable) |>
-          dplyr::slice(1) |>
-          dplyr::ungroup() |>
+          dplyr::distinct(
+            variable,
+            .keep_all = TRUE
+          )
+      })
+      
+      
+      # --------------------------------------------------------
+      # Available measures
+      # --------------------------------------------------------
+      
+      available_measures <- reactive({
+        
+        measures <- matched_metadata() |>
+          dplyr::filter(
+            role == "measure"
+          )
+        
+        if (
+          "display_order" %in% names(measures)
+        ) {
+          
+          measures <- measures |>
+            dplyr::arrange(
+              display_order
+            )
+        }
+        
+        measures
+      })
+      
+      
+      # --------------------------------------------------------
+      # Update measure selector
+      # --------------------------------------------------------
+      
+      observe({
+        
+        measures <- available_measures()
+        
+        req(
+          nrow(measures) > 0
+        )
+        
+        current_measure <- isolate(
+          input$measure
+        )
+        
+        choices <- stats::setNames(
+          measures$variable,
+          measures$label
+        )
+        
+        selected_measure <-
+          if (
+            !is.null(current_measure) &&
+            current_measure %in% measures$variable
+          ) {
+            
+            current_measure
+            
+          } else {
+            
+            measures$variable[[1]]
+          }
+        
+        updateSelectInput(
+          session = session,
+          inputId = "measure",
+          choices = choices,
+          selected = selected_measure
+        )
+      })
+      
+      
+      # --------------------------------------------------------
+      # Available filters
+      # --------------------------------------------------------
+      
+      available_filters <- reactive({
+        
+        filters <- matched_metadata() |>
+          dplyr::filter(
+            role %in% c(
+              "filter",
+              "dimension"
+            )
+          )
+        
+        
+        # Respect default_filterable where available
+        if (
+          "default_filterable" %in%
+          names(filters)
+        ) {
+          
+          filters <- filters |>
+            dplyr::filter(
+              is.na(default_filterable) |
+                default_filterable == TRUE
+            )
+        }
+        
+        
+        if (
+          "display_order" %in%
+          names(filters)
+        ) {
+          
+          filters <- filters |>
+            dplyr::arrange(
+              display_order
+            )
+        }
+        
+        
+        filters |>
           dplyr::select(
             variable,
             label
-          )
-        
+          ) |>
+          dplyr::distinct()
       })
       
-      # add dynamic UI filter
+      
+      # --------------------------------------------------------
+      # Create dynamic filters
+      # --------------------------------------------------------
+      
       output$dynamic_filters <- renderUI({
         
         req(data())
-        req(available_filters())
         
-        filter_list <- lapply(
-          seq_len(nrow(available_filters())),
+        filters <- available_filters()
+        
+        if (
+          nrow(filters) == 0
+        ) {
+          
+          return(
+            tags$p(
+              "No filters available for this dataset."
+            )
+          )
+        }
+        
+        
+        filter_controls <- lapply(
+          seq_len(
+            nrow(filters)
+          ),
           function(i) {
             
-            filter_var <- available_filters()$variable[i]
-            filter_label <- available_filters()$label[i]
+            filter_var <- filters$variable[[i]]
+            filter_label <- filters$label[[i]]
             
-            selectizeInput(
-              inputId = session$ns(filter_var),
-              label = filter_label,
-              choices = sort(
-                unique(data()[[filter_var]])
-              ),
-              multiple = TRUE
+            
+            # Get values from actual data column
+            values <- data()[[
+              filter_var
+            ]]
+            
+            
+            # Remove NA
+            values <- values[
+              !is.na(values)
+            ]
+            
+            
+            # Convert to character
+            values <- as.character(
+              values
             )
             
+            
+            # Remove blanks
+            values <- values[
+              trimws(values) != ""
+            ]
+            
+            
+            # Unique + sorted
+            values <- sort(
+              unique(values)
+            )
+            
+            
+            selectizeInput(
+              inputId = session$ns(
+                filter_var
+              ),
+              label = filter_label,
+              choices = values,
+              selected = character(0),
+              multiple = TRUE,
+              options = list(
+                placeholder = paste(
+                  "All",
+                  filter_label
+                ),
+                closeAfterSelect = TRUE
+              )
+            )
           }
         )
         
+        
         do.call(
           tagList,
-          filter_list
+          filter_controls
         )
-        
       })
       
       
-      # tempt test - check the filters shiny thinks are available
-      observe({
-        
-        req(available_filters())
-        
-        message("Available filters:")
-        
-        print(
-          available_filters()
-        )
-        
-      })
-      
-      # temp test 2  - check metadata roles
-      observe({
-        
-        req(metadata())
-        
-        message("Metadata roles:")
-        
-        print(
-          metadata() |>
-            dplyr::count(role)
-        )
-        
-      })
-      
-      observe({
-        
-        req(data())
-        
-        # temp test
-        message("Columns in uploaded dataset: ")
-        print(names(data()))
-        
-        available_measures <- variables_master |>
-          dplyr::filter(
-            role == "measure",
-            variable %in% names(data())
-            ) |>
-          dplyr::arrange(display_order)
-
-        updateSelectInput(
-          session,
-          "measure",
-          choices = stats::setNames(
-            available_measures$variable,
-            available_measures$label
-          ),
-          selected = available_measures$variable[[1]]
-        )
-        
-        # make academic year filter conditional on academic year existing in the data
-        if ("academic_year" %in% names(data())) {
-          
-          updateSelectizeInput(
-            session,
-            "academic_year",
-            choices = sort(unique(data()$academic_year)),
-            server = TRUE
-          )
-          
-        }
-        
-        # make age_group filter conditional on age_group existing in data
-        if ("age_group" %in% names(data())) {
-          updateSelectizeInput(
-            session,
-            "age_group",
-            choices = sort(unique(data()$age_group)),
-            server = TRUE
-          )
-        }
-        
-        if ("provision_type" %in% names(data())) {
-          updateSelectizeInput(
-            session,
-            "provision_type",
-            choices = sort(unique(data()$provision_type)),
-            server = TRUE
-          )
-        }
-        
-        if ("subject" %in% names(data())) {
-          updateSelectizeInput(
-            session,
-            "subject",
-            choices = sort(unique(data()$sector_subject_area)),
-            server = TRUE
-          )
-        }
-        
-        if ("region" %in% names(data())) {
-          updateSelectizeInput(
-            session,
-            "region",
-            choices = sort(unique(data()$region_name)),
-            server = TRUE
-          )
-        }
-      })
-      
-      
-      # ------------------------------------------------------
-      # Reset filters
-      # ------------------------------------------------------
-      
-      observeEvent(
-        input$reset,
-        {
-          
-          updateSelectizeInput(
-            session,
-            "academic_year",
-            selected = character(0)
-          )
-          
-          updateSelectizeInput(
-            session,
-            "age_group",
-            selected = character(0)
-          )
-          
-          updateSelectizeInput(
-            session,
-            "provision_type",
-            selected = character(0)
-          )
-          
-          updateSelectizeInput(
-            session,
-            "subject",
-            selected = character(0)
-          )
-          
-          updateSelectizeInput(
-            session,
-            "region",
-            selected = character(0)
-          )
-        }
-      )
-      
-      
-      # ------------------------------------------------------
-      # Apply selected filters to the data
-      # ------------------------------------------------------
+      # --------------------------------------------------------
+      # Apply selected filters
+      # --------------------------------------------------------
       
       filtered_data <- reactive({
         
+        req(data())
+        
         filtered <- data()
         
-        # ensure academic year can only be filtered if it exists in the uploaded data
+        filters <- available_filters()
+        
+        
         if (
-          "academic_year" %in% names(filtered) &&
-          length(input$academic_year) > 0
+          nrow(filters) == 0
         ) {
           
-          filtered <- filtered |>
-            dplyr::filter(
-              academic_year %in% input$academic_year
-            )
+          return(
+            filtered
+          )
         }
         
         
-        if (
-          "age_group" %in% names(filtered) &&
-          length(input$age_group) > 0
+        for (
+          filter_var in filters$variable
         ) {
           
-          filtered <- filtered |>
-            dplyr::filter(
-              age_group %in% input$age_group
-            )
-        }
-        
-        
-        if (
-          "provision_type" %in% names(filtered) &&
-          length(input$provision_type) > 0
-        ) {
+          selected_values <- input[[
+            filter_var
+          ]]
           
-          filtered <- filtered |>
-            dplyr::filter(
-              provision_type %in% input$provision_type
-            )
-        }
-        
-        
-        if (
-          "sector_subject_area" %in% names(filtered) &&
-          length(input$sector_subject_area) > 0
-        ) {
           
-          filtered <- filtered |>
-            dplyr::filter(
-              sector_subject_area %in% input$subject
-            )
-        }
-        
-        
-        if (
-          "region_name" %in% names(filtered) &&
-          length(input$region_name) > 0
-        ) {
-          
-          filtered <- filtered |>
-            dplyr::filter(
-              region_name %in% input$region
-            )
+          # Only filter when user selected something
+          if (
+            !is.null(selected_values) &&
+            length(selected_values) > 0
+          ) {
+            
+            filtered <- filtered[
+              as.character(
+                filtered[[
+                  filter_var
+                ]]
+              ) %in%
+                as.character(
+                  selected_values
+                ),
+              ,
+              drop = FALSE
+            ]
+          }
         }
         
         
@@ -305,28 +332,128 @@ mod_filters_server <- function(id,
       })
       
       
-      # ------------------------------------------------------
+      # --------------------------------------------------------
       # Current selected filters
-      # ------------------------------------------------------
+      # --------------------------------------------------------
       
       current_filters <- reactive({
         
-        list(
-          academic_year = input$academic_year,
-          age_group = input$age_group,
-          provision_type = input$provision_type,
-          subject = input$subject,
-          region = input$region
+        filters <- available_filters()
+        
+        
+        if (
+          nrow(filters) == 0
+        ) {
+          
+          return(
+            list()
+          )
+        }
+        
+        
+        selected <- lapply(
+          filters$variable,
+          function(filter_var) {
+            
+            value <- input[[
+              filter_var
+            ]]
+            
+            if (
+              is.null(value)
+            ) {
+              
+              character(0)
+              
+            } else {
+              
+              value
+            }
+          }
+        )
+        
+        
+        names(selected) <- filters$variable
+        
+        selected
+      })
+      
+      
+      # --------------------------------------------------------
+      # Reset filters
+      # --------------------------------------------------------
+      
+      observeEvent(
+        input$reset,
+        {
+          
+          filters <- available_filters()
+          
+          if (
+            nrow(filters) > 0
+          ) {
+            
+            for (
+              filter_var in filters$variable
+            ) {
+              
+              updateSelectizeInput(
+                session = session,
+                inputId = filter_var,
+                selected = character(0)
+              )
+            }
+          }
+        }
+      )
+      
+      
+      # --------------------------------------------------------
+      # Diagnostics
+      # --------------------------------------------------------
+      
+      observe({
+        
+        req(data())
+        
+        message(
+          "Rows in current dataset: ",
+          nrow(data())
+        )
+        
+        message(
+          "Columns in current dataset:"
+        )
+        
+        print(
+          names(data())
+        )
+        
+        message(
+          "Available measures:"
+        )
+        
+        print(
+          available_measures()
+        )
+        
+        message(
+          "Available filters:"
+        )
+        
+        print(
+          available_filters()
         )
       })
       
       
-      # ------------------------------------------------------
-      # Return everything needed by the other modules
-      # ------------------------------------------------------
+      # --------------------------------------------------------
+      # Return
+      # --------------------------------------------------------
       
       return(
         list(
+          
           data = filtered_data,
           
           measure = reactive(
@@ -339,3 +466,4 @@ mod_filters_server <- function(id,
     }
   )
 }
+

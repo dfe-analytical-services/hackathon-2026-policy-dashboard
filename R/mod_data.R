@@ -27,7 +27,9 @@ mod_data_ui <- function(id) {
     fileInput(
       inputId = ns("upload_guidance"),
       label = "Choose data guidance file (.txt or .csv only)",
-      accept = c(".txt", ".csv")
+      accept = c(".txt", ".csv"),
+      buttonLabel = "Browse...",
+      placeholder = "No file selected"
     ),
     
     textOutput(
@@ -52,9 +54,10 @@ mod_data_server <- function(
     id,
     function(input, output, session) {
       
-      # ------------------------------------------------------
-      # Show which file is being used
-      # ------------------------------------------------------
+      
+      # --------------------------------------------------------
+      # Show which data file is being used
+      # --------------------------------------------------------
       
       output$current_file <- renderText({
         
@@ -69,10 +72,10 @@ mod_data_server <- function(
       })
       
       
-      # ------------------------------------------------------
-      # Return uploaded data
-      # Use demo data if no file has been uploaded
-      # ------------------------------------------------------
+      # --------------------------------------------------------
+      # Main dataset
+      # Use demo data if no CSV has been uploaded
+      # --------------------------------------------------------
       
       app_data <- reactive({
         
@@ -87,9 +90,9 @@ mod_data_server <- function(
       })
       
       
-      # ------------------------------------------------------
-      # Return uploaded guidance file path
-      # ------------------------------------------------------
+      # --------------------------------------------------------
+      # Guidance file path
+      # --------------------------------------------------------
       
       guidance_file <- reactive({
         
@@ -98,28 +101,45 @@ mod_data_server <- function(
         }
         
         input$upload_guidance$datapath
-        
       })
       
-      # ------------------------------------------------------
-      # Parse data guidance
-      # ------------------------------------------------------
+      
+      # --------------------------------------------------------
+      # Metadata
+      #
+      # No guidance uploaded:
+      #   use built-in variables_master metadata
+      #
+      # Guidance uploaded:
+      #   parse the uploaded guidance file
+      # --------------------------------------------------------
       
       metadata <- reactive({
         
-        req(guidance_file())
+        if (is.null(guidance_file())) {
+          
+          return(
+            variables_master
+          )
+        }
         
-        parse_data_guidance(
+        parsed_metadata <- parse_data_guidance(
           guidance_file()
         )
         
+        parsed_metadata
       })
       
-      # temp test - is metadata being parsed and matched correctly
+      
+      # --------------------------------------------------------
+      # Temporary diagnostic checks
+      # Useful during hackathon development
+      # --------------------------------------------------------
+      
       observe({
         
-        req(metadata())
         req(app_data())
+        req(metadata())
         
         matched_variables <- metadata() |>
           dplyr::filter(
@@ -131,20 +151,36 @@ mod_data_server <- function(
           )
         
         message(
-          "Variables in uploaded data: ",
+          "Variables in current data: ",
           ncol(app_data())
         )
         
         message(
-          "Unique variables matched to metadata: ",
+          "Variables matched to metadata: ",
           nrow(matched_variables)
         )
         
+        message(
+          "Current data columns:"
+        )
+        
+        print(
+          names(app_data())
+        )
+        
+        message(
+          "Matched metadata variables:"
+        )
+        
+        print(
+          matched_variables$variable
+        )
       })
       
-      # ------------------------------------------------------
-      # Return reactive dataset and metadata to the rest of the app
-      # ------------------------------------------------------
+      
+      # --------------------------------------------------------
+      # Return data and metadata
+      # --------------------------------------------------------
       
       return(
         list(
@@ -152,7 +188,6 @@ mod_data_server <- function(
           metadata = metadata
         )
       )
-      
     }
   )
 }
