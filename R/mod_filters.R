@@ -7,10 +7,7 @@ mod_filters_ui <- function(id) {
     selectInput(
       ns("measure"),
       "Measure",
-      choices = c(
-        "Enrolments" = "enrolments",
-        "Achievements" = "achievements"
-      )
+      choices = NULL # updated to be based on the file uploaded
     ),
     
     selectizeInput(
@@ -65,6 +62,23 @@ mod_filters_server <- function(id, data) {
       observe({
         
         req(data())
+        
+        available_measures <- variables_master |>
+          dplyr::filter(
+            role == "measure",
+            variable %in% names(data())
+            ) |>
+          dplyr::arrange(display_order)
+
+        updateSelectInput(
+          session,
+          "measure",
+          choices = stats::setNames(
+            available_measures$variable,
+            available_measures$label
+          ),
+          selected = available_measures$variable[[1]]
+        )
         
         updateSelectizeInput(
           session,

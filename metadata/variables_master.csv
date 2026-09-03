@@ -1,0 +1,73 @@
+﻿variable,label,role,filter_type,default_filterable,display_order
+age_band,Age group,filter,select,TRUE,10
+age_group,Age group,filter,select,TRUE,10
+age_summary,Age group,filter,select,TRUE,10
+age_summary_with_unknowns,Age group (with unknowns),filter,select,TRUE,11
+age_youth_adult,Age (under 19 / 19+),filter,select,TRUE,12
+age_summary_loans,Age group (loans),filter,select,TRUE,13
+provider_type,Provider type,filter,select,TRUE,20
+provision_type,Provision type,filter,select,TRUE,21
+regulated_status,Regulated qualifications,filter,select,TRUE,22
+regulated_qualification,Regulated qualifications,filter,select,TRUE,22
+sex,Sex,filter,select,TRUE,30
+ethnicity_major,Ethnicity major,filter,select,TRUE,31
+ethnicity_minor,Ethnicity detail,filter,select,TRUE,32
+minority_ethnic,Minority ethnic,filter,select,TRUE,33
+learner_characteristic,Learner characteristic,filter,select,TRUE,34
+learning_difficulty_disability,Learning difficulty/disability,filter,select,TRUE,35
+primary_learning_difficulty_disability,Primary learning difficulty/disability,filter,select,TRUE,36
+lldd,Learning difficulty/disability,filter,select,TRUE,37
+provider_name,Provider name,identifier,search,TRUE,40
+provider_ukprn,Provider UKPRN,identifier,search,FALSE,41
+ukprn,Provider UKPRN,identifier,search,FALSE,41
+sector_subject_area_t1,Sector subject area (tier 1),filter,select,TRUE,50
+ssa_tier_1,Sector subject area (tier 1),filter,select,TRUE,50
+ssa_tier_2,Sector subject area (tier 2),filter,select,TRUE,51
+stem,STEM subject,filter,select,TRUE,52
+level,Level,filter,select,TRUE,60
+level_group,Level,filter,select,TRUE,60
+qualification_level,Qualification level,filter,select,TRUE,60
+qualification_type,Qualification type,filter,select,TRUE,61
+notional_nvq_level,Detailed level,filter,select,TRUE,62
+gcse_type,GCSE type,filter,select,TRUE,70
+essential_skills_subject,Essential skills subject,filter,select,TRUE,71
+essential_skills_type,Essential skills type,filter,select,TRUE,72
+subject_essential_skills,Essential skills subject,filter,select,TRUE,73
+level_essential_skills,Essential skills level,filter,select,TRUE,74
+breakdown,Breakdown,filter,select,TRUE,80
+reporting_period,Reporting period,filter,select,TRUE,81
+time_coverage,Time coverage,filter,select,TRUE,82
+tailored_learning_purpose,Tailored learning purpose,filter,select,TRUE,90
+tailored_learning_outcome,Tailored learning outcome,filter,select,TRUE,91
+family_learning,Family learning,filter,select,TRUE,92
+employer_facing,Employer facing,filter,select,TRUE,93
+participation,Participation,measure,none,FALSE,200
+participation_percent,Participation %,measure,none,FALSE,201
+achievements,Achievements,measure,none,FALSE,202
+learner_achievements,Learner achievements,measure,none,FALSE,202
+aim_achievements,Aim achievements,measure,none,FALSE,203
+aim_achievements_percent,Aim achievements %,measure,none,FALSE,204
+enrolments,Enrolments,measure,none,FALSE,205
+aim_enrolments,Aim enrolments,measure,none,FALSE,206
+achievement_rate,Achievement rate,measure,none,FALSE,207
+retention_rate,Retention rate,measure,none,FALSE,208
+pass_rate,Pass rate,measure,none,FALSE,209
+achievers,Achievers,measure,none,FALSE,210
+completers,Completers,measure,none,FALSE,211
+leavers,Leavers,measure,none,FALSE,212
+applications_received,Applications received,measure,none,FALSE,220
+applications_approved,Applications approved,measure,none,FALSE,221
+loan_amount_awarded_in_thousands,Loan amount awarded (£000s),measure,none,FALSE,222
+fcfj_enrolments,Free Courses for Jobs enrolments,measure,none,FALSE,230
+fcfj_achievements,Free Courses for Jobs achievements,measure,none,FALSE,231
+starts,Starts,measure,none,FALSE,240
+population_estimate,Population estimate,measure,none,FALSE,241
+starts_rate_per_100000_population,Starts per 100k population,measure,none,FALSE,242
+participation_rate_per_100000_population,Participation per 100k population,measure,none,FALSE,243
+learner_achievements_rate_per_100000_population,Learner achievements per 100k population,measure,none,FALSE,244
+region_name,Region,filter,select,TRUE,15
+region,Region,filter,select,TRUE,15
+local_authority,Local authority,filter,select,TRUE,16
+local_authority_district,Local authority district,filter,select,TRUE,17
+parliamentary_constituency,Parliamentary constituency,filter,select,TRUE,18
+english_devolved_area,English devolved area,filter,select,TRUE,19
