@@ -106,12 +106,7 @@ ui <- fluidPage(
     )
   ),
   
-  
   fluidRow(
-    
-    # --------------------------------------------------------
-    # Left-hand panel
-    # --------------------------------------------------------
     
     column(
       width = 3,
@@ -119,7 +114,6 @@ ui <- fluidPage(
       div(
         class = "filter-panel",
         
-        # Data upload module
         mod_data_ui(
           "data"
         ),
@@ -135,11 +129,6 @@ ui <- fluidPage(
         )
       )
     ),
-    
-    
-    # --------------------------------------------------------
-    # Main results area
-    # --------------------------------------------------------
     
     column(
       width = 9,
@@ -181,7 +170,7 @@ server <- function(
 ) {
   
   # ----------------------------------------------------------
-  # Data upload / extract
+  # Data module
   # ----------------------------------------------------------
   
   app_data <- mod_data_server(
@@ -191,7 +180,7 @@ server <- function(
   
   
   # ----------------------------------------------------------
-  # Filters
+  # Filter module
   # ----------------------------------------------------------
   
   filters <- mod_filters_server(
@@ -201,123 +190,35 @@ server <- function(
   
   
   # ----------------------------------------------------------
-  # Apply filters
-  # ----------------------------------------------------------
-  
-  filtered_data <- reactive({
-    
-    data <- app_data()
-    
-    
-    if (length(filters$academic_year()) > 0) {
-      
-      data <- data |>
-        dplyr::filter(
-          academic_year %in%
-            filters$academic_year()
-        )
-    }
-    
-    
-    if (length(filters$age_group()) > 0) {
-      
-      data <- data |>
-        dplyr::filter(
-          age_group %in%
-            filters$age_group()
-        )
-    }
-    
-    
-    if (length(filters$provision_type()) > 0) {
-      
-      data <- data |>
-        dplyr::filter(
-          provision_type %in%
-            filters$provision_type()
-        )
-    }
-    
-    
-    if (length(filters$subject()) > 0) {
-      
-      data <- data |>
-        dplyr::filter(
-          sector_subject_area %in%
-            filters$subject()
-        )
-    }
-    
-    
-    if (length(filters$region()) > 0) {
-      
-      data <- data |>
-        dplyr::filter(
-          region_name %in%
-            filters$region()
-        )
-    }
-    
-    
-    data
-  })
-  
-  
-  # ----------------------------------------------------------
-  # Current filters
-  # ----------------------------------------------------------
-  
-  current_filters <- reactive({
-    
-    list(
-      academic_year =
-        filters$academic_year(),
-      
-      age_group =
-        filters$age_group(),
-      
-      provision_type =
-        filters$provision_type(),
-      
-      subject =
-        filters$subject(),
-      
-      region =
-        filters$region()
-    )
-  })
-  
-  
-  # ----------------------------------------------------------
-  # Summary
+  # Summary module
   # ----------------------------------------------------------
   
   mod_summary_server(
     "summary",
-    filtered_data = filtered_data,
+    filtered_data = filters$data,
     measure = filters$measure,
-    filters = current_filters
+    filters = filters$filters
   )
   
   
   # ----------------------------------------------------------
-  # Chart
+  # Chart module
   # ----------------------------------------------------------
   
   mod_chart_server(
     "chart",
-    filtered_data = filtered_data,
+    filtered_data = filters$data,
     measure = filters$measure
   )
   
   
   # ----------------------------------------------------------
-  # Table / download
+  # Table module
   # ----------------------------------------------------------
   
   mod_table_server(
     "table",
-    filtered_data = filtered_data
+    filtered_data = filters$data
   )
 }
 

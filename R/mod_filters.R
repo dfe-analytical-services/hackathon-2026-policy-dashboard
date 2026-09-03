@@ -62,6 +62,10 @@ mod_filters_server <- function(id, data) {
     id,
     function(input, output, session) {
       
+      # ------------------------------------------------------
+      # Update filter choices from the loaded dataset
+      # ------------------------------------------------------
+      
       observe({
         
         req(data())
@@ -103,6 +107,10 @@ mod_filters_server <- function(id, data) {
       })
       
       
+      # ------------------------------------------------------
+      # Reset filters
+      # ------------------------------------------------------
+      
       observeEvent(
         input$reset,
         {
@@ -140,32 +148,93 @@ mod_filters_server <- function(id, data) {
       )
       
       
+      # ------------------------------------------------------
+      # Apply selected filters to the data
+      # ------------------------------------------------------
+      
+      filtered_data <- reactive({
+        
+        filtered <- data()
+        
+        
+        if (length(input$academic_year) > 0) {
+          
+          filtered <- filtered |>
+            dplyr::filter(
+              academic_year %in% input$academic_year
+            )
+        }
+        
+        
+        if (length(input$age_group) > 0) {
+          
+          filtered <- filtered |>
+            dplyr::filter(
+              age_group %in% input$age_group
+            )
+        }
+        
+        
+        if (length(input$provision_type) > 0) {
+          
+          filtered <- filtered |>
+            dplyr::filter(
+              provision_type %in% input$provision_type
+            )
+        }
+        
+        
+        if (length(input$subject) > 0) {
+          
+          filtered <- filtered |>
+            dplyr::filter(
+              sector_subject_area %in% input$subject
+            )
+        }
+        
+        
+        if (length(input$region) > 0) {
+          
+          filtered <- filtered |>
+            dplyr::filter(
+              region_name %in% input$region
+            )
+        }
+        
+        
+        filtered
+      })
+      
+      
+      # ------------------------------------------------------
+      # Current selected filters
+      # ------------------------------------------------------
+      
+      current_filters <- reactive({
+        
+        list(
+          academic_year = input$academic_year,
+          age_group = input$age_group,
+          provision_type = input$provision_type,
+          subject = input$subject,
+          region = input$region
+        )
+      })
+      
+      
+      # ------------------------------------------------------
+      # Return everything needed by the other modules
+      # ------------------------------------------------------
+      
       return(
         list(
+          data = filtered_data,
           
           measure = reactive(
             input$measure
           ),
           
-          academic_year = reactive(
-            input$academic_year
-          ),
-          
-          age_group = reactive(
-            input$age_group
-          ),
-          
-          provision_type = reactive(
-            input$provision_type
-          ),
-          
-          subject = reactive(
-            input$subject
-          ),
-          
-          region = reactive(
-            input$region
-          )
+          filters = current_filters
         )
       )
     }
