@@ -4,12 +4,13 @@
 # ============================================================
 
 source("global.R")
+
 max_file_size_mb <- 2000
 options(shiny.maxRequestSize = max_file_size_mb * 1e6)
 
+
 # ------------------------------------------------------------
 # Temporary demo data
-
 # ------------------------------------------------------------
 
 set.seed(2026)
@@ -108,26 +109,20 @@ ui <- fluidPage(
   
   fluidRow(
     
+    # --------------------------------------------------------
+    # Left-hand panel
+    # --------------------------------------------------------
+    
     column(
       width = 3,
       
       div(
         class = "filter-panel",
-        # data upload button
-        h3("Load data"),
         
-        fileInput(
-          inputId = "upload_data",
-          label = "Choose a CSV file",
-          accept = ".csv", # file must be a csv - currently no max size limit
-          buttonLabel = "Browse...",
-          placeholder = "No file selected"
+        # Data upload module
+        mod_data_ui(
+          "data"
         ),
-        
-        # show what fie has been loaded
-        textOutput("current_file"),
-        
-        tags$hr(),
         
         h3("Build your data cut"),
         
@@ -140,6 +135,11 @@ ui <- fluidPage(
         )
       )
     ),
+    
+    
+    # --------------------------------------------------------
+    # Main results area
+    # --------------------------------------------------------
     
     column(
       width = 9,
@@ -176,41 +176,33 @@ ui <- fluidPage(
 
 server <- function(
     input,
-    outputs,
+    output,
     session
 ) {
   
-  # include data name in output
-  outputs$current_file <- renderText({
-    # if using dummy data - show this
-    if (is.null(input$upload_data$datapath)) {
-      return("Using demo data")
-    }
-    # if using uploaded data - show the file that's been updated
-    paste(
-      "Loaded file: ",
-      input$upload_data$name
-    )
-  })
+  # ----------------------------------------------------------
+  # Data upload / extract
+  # ----------------------------------------------------------
   
-  app_data <- reactive({
-    # if no data uploaded, use dummy data
-    if(is.null(input$upload_data)) {
-      return(demo_data)
-    }
-    
-    readr::read_csv(
-      input$upload_data$datapath,
-      show_col_types = FALSE
-    )
-  })
+  app_data <- mod_data_server(
+    "data",
+    demo_data = demo_data
+  )
   
+  
+  # ----------------------------------------------------------
+  # Filters
+  # ----------------------------------------------------------
   
   filters <- mod_filters_server(
     "filters",
     data = app_data
   )
   
+  
+  # ----------------------------------------------------------
+  # Apply filters
+  # ----------------------------------------------------------
   
   filtered_data <- reactive({
     
@@ -271,6 +263,10 @@ server <- function(
   })
   
   
+  # ----------------------------------------------------------
+  # Current filters
+  # ----------------------------------------------------------
+  
   current_filters <- reactive({
     
     list(
@@ -292,6 +288,10 @@ server <- function(
   })
   
   
+  # ----------------------------------------------------------
+  # Summary
+  # ----------------------------------------------------------
+  
   mod_summary_server(
     "summary",
     filtered_data = filtered_data,
@@ -300,12 +300,20 @@ server <- function(
   )
   
   
+  # ----------------------------------------------------------
+  # Chart
+  # ----------------------------------------------------------
+  
   mod_chart_server(
     "chart",
     filtered_data = filtered_data,
     measure = filters$measure
   )
   
+  
+  # ----------------------------------------------------------
+  # Table / download
+  # ----------------------------------------------------------
   
   mod_table_server(
     "table",
