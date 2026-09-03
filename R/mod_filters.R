@@ -138,40 +138,54 @@ mod_filters_server <- function(id,
           selected = available_measures$variable[[1]]
         )
         
-        updateSelectizeInput(
-          session,
-          "academic_year",
-          choices = sort(unique(data()$academic_year)),
-          server = TRUE
-        )
+        # make academic year filter conditional on academic year existing in the data
+        if ("academic_year" %in% names(data())) {
+          
+          updateSelectizeInput(
+            session,
+            "academic_year",
+            choices = sort(unique(data()$academic_year)),
+            server = TRUE
+          )
+          
+        }
         
-        updateSelectizeInput(
-          session,
-          "age_group",
-          choices = sort(unique(data()$age_group)),
-          server = TRUE
-        )
+        # make age_group filter conditional on age_group existing in data
+        if ("age_group" %in% names(data())) {
+          updateSelectizeInput(
+            session,
+            "age_group",
+            choices = sort(unique(data()$age_group)),
+            server = TRUE
+          )
+        }
         
-        updateSelectizeInput(
-          session,
-          "provision_type",
-          choices = sort(unique(data()$provision_type)),
-          server = TRUE
-        )
+        if ("provision_type" %in% names(data())) {
+          updateSelectizeInput(
+            session,
+            "provision_type",
+            choices = sort(unique(data()$provision_type)),
+            server = TRUE
+          )
+        }
         
-        updateSelectizeInput(
-          session,
-          "subject",
-          choices = sort(unique(data()$sector_subject_area)),
-          server = TRUE
-        )
+        if ("subject" %in% names(data())) {
+          updateSelectizeInput(
+            session,
+            "subject",
+            choices = sort(unique(data()$sector_subject_area)),
+            server = TRUE
+          )
+        }
         
-        updateSelectizeInput(
-          session,
-          "region",
-          choices = sort(unique(data()$region_name)),
-          server = TRUE
-        )
+        if ("region" %in% names(data())) {
+          updateSelectizeInput(
+            session,
+            "region",
+            choices = sort(unique(data()$region_name)),
+            server = TRUE
+          )
+        }
       })
       
       
@@ -224,8 +238,11 @@ mod_filters_server <- function(id,
         
         filtered <- data()
         
-        
-        if (length(input$academic_year) > 0) {
+        # ensure academic year can only be filtered if it exists in the uploaded data
+        if (
+          "academic_year" %in% names(filtered) &&
+          length(input$academic_year) > 0
+        ) {
           
           filtered <- filtered |>
             dplyr::filter(
@@ -234,7 +251,10 @@ mod_filters_server <- function(id,
         }
         
         
-        if (length(input$age_group) > 0) {
+        if (
+          "age_group" %in% names(filtered) &&
+          length(input$age_group) > 0
+        ) {
           
           filtered <- filtered |>
             dplyr::filter(
@@ -243,7 +263,10 @@ mod_filters_server <- function(id,
         }
         
         
-        if (length(input$provision_type) > 0) {
+        if (
+          "provision_type" %in% names(filtered) &&
+          length(input$provision_type) > 0
+        ) {
           
           filtered <- filtered |>
             dplyr::filter(
@@ -252,7 +275,10 @@ mod_filters_server <- function(id,
         }
         
         
-        if (length(input$subject) > 0) {
+        if (
+          "sector_subject_area" %in% names(filtered) &&
+          length(input$sector_subject_area) > 0
+        ) {
           
           filtered <- filtered |>
             dplyr::filter(
@@ -261,7 +287,10 @@ mod_filters_server <- function(id,
         }
         
         
-        if (length(input$region) > 0) {
+        if (
+          "region_name" %in% names(filtered) &&
+          length(input$region_name) > 0
+        ) {
           
           filtered <- filtered |>
             dplyr::filter(
