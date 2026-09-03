@@ -10,39 +10,9 @@ mod_filters_ui <- function(id) {
       choices = NULL # updated to be based on the file uploaded
     ),
     
-    selectizeInput(
-      ns("academic_year"),
-      "Academic year",
-      choices = NULL,
-      multiple = TRUE
-    ),
-    
-    selectizeInput(
-      ns("age_group"),
-      "Age group",
-      choices = NULL,
-      multiple = TRUE
-    ),
-    
-    selectizeInput(
-      ns("provision_type"),
-      "Provision type",
-      choices = NULL,
-      multiple = TRUE
-    ),
-    
-    selectizeInput(
-      ns("subject"),
-      "Subject area",
-      choices = NULL,
-      multiple = TRUE
-    ),
-    
-    selectizeInput(
-      ns("region"),
-      "Region",
-      choices = NULL,
-      multiple = TRUE
+    # allow filters to be dynamic, rather than static
+    uiOutput(
+      ns("dynamic_filters")
     ),
     
     actionButton(
@@ -82,6 +52,38 @@ mod_filters_server <- function(id,
             variable,
             label
           )
+        
+      })
+      
+      # add dynamic UI filter
+      output$dynamic_filters <- renderUI({
+        
+        req(data())
+        req(available_filters())
+        
+        filter_list <- lapply(
+          seq_len(nrow(available_filters())),
+          function(i) {
+            
+            filter_var <- available_filters()$variable[i]
+            filter_label <- available_filters()$label[i]
+            
+            selectizeInput(
+              inputId = session$ns(filter_var),
+              label = filter_label,
+              choices = sort(
+                unique(data()[[filter_var]])
+              ),
+              multiple = TRUE
+            )
+            
+          }
+        )
+        
+        do.call(
+          tagList,
+          filter_list
+        )
         
       })
       
