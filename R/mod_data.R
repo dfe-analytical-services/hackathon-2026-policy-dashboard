@@ -24,6 +24,12 @@ mod_data_ui <- function(id) {
       placeholder = "No file selected"
     ),
     
+    fileInput(
+      inputId = ns("upload_guidance"),
+      label = "Choose data guidance file (.txt or .csv only)",
+      accept = c(".txt", ".csv")
+    ),
+    
     textOutput(
       ns("current_file")
     ),
@@ -80,6 +86,61 @@ mod_data_server <- function(
         )
       })
       
+      
+      # ------------------------------------------------------
+      # Return uploaded guidance file path
+      # ------------------------------------------------------
+      
+      guidance_file <- reactive({
+        
+        if (is.null(input$upload_guidance)) {
+          return(NULL)
+        }
+        
+        input$upload_guidance$datapath
+        
+      })
+      
+      # ------------------------------------------------------
+      # Parse data guidance
+      # ------------------------------------------------------
+      
+      metadata <- reactive({
+        
+        req(guidance_file())
+        
+        parse_data_guidance(
+          guidance_file()
+        )
+        
+      })
+      
+      # temp test - is metadata being parsed and matched correctly
+      observe({
+        
+        req(metadata())
+        req(app_data())
+        
+        matched_variables <- metadata() |>
+          dplyr::filter(
+            variable %in% names(app_data())
+          ) |>
+          dplyr::distinct(
+            variable,
+            .keep_all = TRUE
+          )
+        
+        message(
+          "Variables in uploaded data: ",
+          ncol(app_data())
+        )
+        
+        message(
+          "Unique variables matched to metadata: ",
+          nrow(matched_variables)
+        )
+        
+      })
       
       # ------------------------------------------------------
       # Return reactive dataset to the rest of the app
