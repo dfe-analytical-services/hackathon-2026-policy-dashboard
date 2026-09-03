@@ -4,7 +4,8 @@
 # ============================================================
 
 source("global.R")
-
+max_file_size_mb <- 2000
+options(shiny.maxRequestSize = max_file_size_mb * 1e6)
 
 # ------------------------------------------------------------
 # Temporary demo data
@@ -104,6 +105,7 @@ ui <- fluidPage(
     )
   ),
   
+  
   fluidRow(
     
     column(
@@ -111,6 +113,21 @@ ui <- fluidPage(
       
       div(
         class = "filter-panel",
+        # data upload button
+        h3("Load data"),
+        
+        fileInput(
+          inputId = "upload_data",
+          label = "Choose a CSV file",
+          accept = ".csv", # file must be a csv - currently no max size limit
+          buttonLabel = "Browse...",
+          placeholder = "No file selected"
+        ),
+        
+        # show what fie has been loaded
+        textOutput("current_file"),
+        
+        tags$hr(),
         
         h3("Build your data cut"),
         
@@ -159,12 +176,33 @@ ui <- fluidPage(
 
 server <- function(
     input,
-    output,
+    outputs,
     session
 ) {
   
+  # include data name in output
+  outputs$current_file <- renderText({
+    # if using dummy data - show this
+    if (is.null(input$upload_data$datapath)) {
+      return("Using demo data")
+    }
+    # if using uploaded data - show the file that's been updated
+    paste(
+      "Loaded file: ",
+      input$upload_data$name
+    )
+  })
+  
   app_data <- reactive({
-    demo_data
+    # if no data uploaded, use dummy data
+    if(is.null(input$upload_data)) {
+      return(demo_data)
+    }
+    
+    readr::read_csv(
+      input$upload_data$datapath,
+      show_col_types = FALSE
+    )
   })
   
   
